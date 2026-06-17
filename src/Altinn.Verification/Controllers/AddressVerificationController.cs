@@ -86,7 +86,7 @@ public class AddressVerificationController : ControllerBase
             return validationResult;
         }
 
-        var verified = await _addressVerificationService.SubmitVerificationCodeAsync(userId, request.Value, (AddressType)request.Type, request.VerificationCode, cancellationToken);
+        var verified = await _addressVerificationService.SubmitVerificationCodeAsync(userId, request.Value, (AddressType)request.Type!, request.VerificationCode, cancellationToken);
 
         if (!verified)
         {
@@ -129,7 +129,7 @@ public class AddressVerificationController : ControllerBase
             return validationResult;
         }
 
-        var sendResult = await _addressVerificationService.SendVerificationCodeAsync(userId, request.Value, (AddressType)request.Type, cancellationToken);
+        var sendResult = await _addressVerificationService.SendVerificationCodeAsync(userId, request.Value, (AddressType)request.Type!, cancellationToken);
 
         return sendResult.Status switch
         {
