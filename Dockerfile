@@ -1,0 +1,27 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0.300-alpine3.23@sha256:5c559aa5d99337e400d39ab4fa1f6979d126c29b20939d53658ed38300571e74 AS build
+WORKDIR /app
+
+COPY src/Altinn.Verification/*.csproj ./src/Altinn.Verification/
+COPY src/Altinn.Verification.Core/*.csproj ./src/Altinn.Verification.Core/
+COPY src/Altinn.Verification.Integrations/*.csproj ./src/Altinn.Verification.Integrations/
+
+RUN dotnet restore ./src/Altinn.Verification/Altinn.Verification.csproj
+
+COPY src ./src
+RUN dotnet publish -c Release -o /app_output ./src/Altinn.Verification/Altinn.Verification.csproj
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.8-alpine3.23@sha256:1e37a8236c558ae31bd6bc8144e38e6036b73cf1b0616fe56d79e60babb9d93b AS final
+EXPOSE 5031
+WORKDIR /app
+
+COPY --from=build /app_output .
+
+# setup the user and group
+# the user will have no password, using shell /bin/false and using the group dotnet
+RUN addgroup -g 3000 dotnet && adduser -u 1000 -G dotnet -D -s /bin/false dotnet
+
+# update permissions of files if neccessary before becoming dotnet user
+USER dotnet
+RUN mkdir /tmp/logtelemetry
+
+ENTRYPOINT ["dotnet", "Altinn.Verification.dll"]

@@ -1,0 +1,23 @@
+version: '3.4'
+
+networks:
+  altinnplatform_network:
+    external: false
+
+services:
+  altinn_platform_verification:
+    container_name: altinn-platform-verification
+    image: altinnplatformverification:latest
+    restart: always
+    networks:
+      - altinnplatform_network
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:5031
+      - PostgreSqlSettings__AdminConnectionString=Host=host.docker.internal;Port=5432;Username=platform_verification_admin;Password=Password;Database=verificationdb
+      - PostgreSqlSettings__ConnectionString=Host=host.docker.internal;Port=5432;Username=platform_verification;Password=Password;Database=verificationdb
+    ports:
+      - '5031:5031'
+    build:
+      context: .
+      dockerfile: Dockerfile
