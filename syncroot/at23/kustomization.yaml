@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: product-core
+resources:
+  - ../base
+
+images:
+  - name: verification
+    newName: altinncr.azurecr.io/ghcr.io/altinn/altinn-verification
+    newTag: will-be-replaced
+
+patches:
+  - target:
+      kind: HTTPRoute
+      name: verification
+    patch: |-
+      - op: add
+        path: /spec/hostnames
+        value:
+          - verification.at23.dis-core.altinn.cloud

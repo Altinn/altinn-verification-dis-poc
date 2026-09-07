@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+labels:
+  # Only name goes into selectors — Deployment selectors are immutable, so
+  # keep part-of out of them.
+  - pairs:
+      app.kubernetes.io/name: verification
+    includeSelectors: true
+  - pairs:
+      app.kubernetes.io/part-of: core
+
+resources:
+  - deployment.yaml
+  - service.yaml
+  - httproute.yaml
