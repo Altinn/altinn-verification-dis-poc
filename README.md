@@ -24,6 +24,17 @@ syncroot/
 inside it. That module derives the artifact name, the tag, and the `product-core`
 namespace from `product = "core"`, so don't rename them here in isolation.
 
+### Building the image
+`.github/workflows/docker-publish.yaml` builds `Dockerfile` and pushes to
+`ghcr.io/altinn/altinn-verification`:
+
+- push to `main` → `sha-<short>` and `latest`
+- pull request → builds only, nothing pushed
+- manual dispatch → optionally an extra tag of your choosing
+
+Use the immutable `sha-<short>` tag when deploying; the run's job summary prints the
+tags it produced.
+
 ### Deploying
 Run the **Publish Syncroot artifact** workflow, picking an environment and the image
 tag to deploy. The tag is written into `syncroot/<env>/kustomization.yaml` at publish
@@ -43,9 +54,10 @@ kustomize build syncroot/at23
 - **`core` needs onboarding as a product in both clusters** — one
   `dis_products_syncroot_multitenancy` call per environment in the `core` repo.
   Nothing else creates the `product-core` namespace or the Flux configuration.
-- **No image is published.** `ghcr.io/altinn/altinn-verification` does not exist yet;
-  this repo has no build/push workflow. The manifests pull it through the ACR cache
-  (`altinncr.azurecr.io/ghcr.io/...`), following info.altinn.no.
+- **The GHCR package must be readable by ACR.** The manifests pull the image through
+  the ACR cache (`altinncr.azurecr.io/ghcr.io/...`), following info.altinn.no. A newly
+  published GHCR package is private by default, so it needs either public visibility
+  or a credential set on the `altinncr` cache rule before the first pull works.
 - **This repo needs push rights to `altinncr`.** Add an entry to
   `infrastructure/syncroots/terraform.tfvars.json` in `Altinn/altinn-platform`:
 
