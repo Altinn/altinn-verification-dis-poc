@@ -16,7 +16,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: altinn/altinn-verification
+  IMAGE_NAME: altinn/altinn-verification-dis-demo
 
 permissions:
   contents: read

@@ -26,7 +26,7 @@ namespace from `product = "core"`, so don't rename them here in isolation.
 
 ### Building the image
 `.github/workflows/docker-publish.yaml` builds `Dockerfile` and pushes to
-`ghcr.io/altinn/altinn-verification`:
+`ghcr.io/altinn/altinn-verification-dis-demo`:
 
 - push to `main` → `sha-<short>` and `latest`
 - pull request → builds only, nothing pushed

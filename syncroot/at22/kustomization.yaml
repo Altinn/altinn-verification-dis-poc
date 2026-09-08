@@ -6,7 +6,7 @@ resources:
 
 images:
   - name: verification
-    newName: altinncr.azurecr.io/ghcr.io/altinn/altinn-verification
+    newName: altinncr.azurecr.io/ghcr.io/altinn/altinn-verification-dis-demo
     newTag: will-be-replaced
 
 patches:
