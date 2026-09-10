@@ -1,5 +1,5 @@
 name: Publish Syncroot artifact
-run-name: Deploy ${{ inputs.image-tag }} to ${{ inputs.environment }}
+run-name: Deploy ${{ inputs.image-tag || 'latest main' }} to ${{ inputs.environment }}
 
 on:
   workflow_dispatch:
@@ -11,15 +11,18 @@ on:
           - at22
           - at23
       image-tag:
-        description: "Verification image tag to deploy (e.g. sha-abc1234)"
-        required: true
+        description: "Verification image tag to deploy (e.g. sha-abc1234). Leave empty for the latest image on main."
+        type: string
+        required: false
 
 env:
   SYNCROOT_ARTIFACT_NAME: core/syncroot
+  VERIFICATION_IMAGE: ghcr.io/altinn/altinn-verification-dis-demo
 
 permissions:
   contents: read
   id-token: write
+  packages: read
 
 concurrency:
   group: publish-syncroot-${{ github.ref_name }}
@@ -34,8 +37,38 @@ jobs:
       - name: Checkout
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
+      - name: Log into ghcr.io
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve image tag
+        id: resolve
+        env:
+          IMAGE_TAG_INPUT: ${{ inputs.image-tag }}
+        run: |
+          set -euo pipefail
+          tag="$IMAGE_TAG_INPUT"
+          if [ -z "$tag" ]; then
+            # Dispatch is gated to main, so GITHUB_SHA is main's tip. The first seven
+            # characters are what docker/metadata-action's type=sha tag uses.
+            tag="sha-${GITHUB_SHA::7}"
+            echo "No image-tag given; defaulting to the latest image on main: $tag"
+          fi
+          if ! out=$(docker buildx imagetools inspect "$VERIFICATION_IMAGE:$tag" 2>&1); then
+            echo "$out"
+            echo "::error::Could not resolve $VERIFICATION_IMAGE:$tag. If that commit just landed on main, wait for 'Build and publish Docker image' to finish."
+            exit 1
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
       - name: Update image tag
-        run: yq -i '(.images[] | select(.name == "verification")).newTag = "${{ inputs.image-tag }}"' ./syncroot/${{ inputs.environment }}/kustomization.yaml
+        env:
+          IMAGE_TAG: ${{ steps.resolve.outputs.tag }}
+          ENVIRONMENT: ${{ inputs.environment }}
+        run: yq -i '(.images[] | select(.name == "verification")).newTag = strenv(IMAGE_TAG)' "./syncroot/$ENVIRONMENT/kustomization.yaml"
 
       - name: Build and push syncroot artifact
         uses: Altinn/altinn-platform/actions/flux/build-push-image@523f141da4f116fdd7331585396d83a5d7ade7ea # main
@@ -46,3 +79,18 @@ jobs:
           azure_subscription_id: ${{ secrets.DIS_SYNCROOT_AZURE_SUBSCRIPTION_ID }}
           azure_app_id: ${{ secrets.DIS_SYNCROOT_AZURE_CLIENT_ID }}
           azure_tenant_id: ${{ secrets.DIS_SYNCROOT_AZURE_TENANT_ID }}
+
+      - name: Summary
+        env:
+          IMAGE_TAG: ${{ steps.resolve.outputs.tag }}
+          ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          {
+            echo "### Syncroot published for $ENVIRONMENT"
+            echo ""
+            echo "Image tag written into \`syncroot/$ENVIRONMENT/kustomization.yaml\`:"
+            echo ""
+            echo '```'
+            echo "$VERIFICATION_IMAGE:$IMAGE_TAG"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
