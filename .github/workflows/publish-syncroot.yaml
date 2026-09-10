@@ -1,0 +1,48 @@
+name: Publish Syncroot artifact
+run-name: Deploy ${{ inputs.image-tag }} to ${{ inputs.environment }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Select environment"
+        type: choice
+        options:
+          - at22
+          - at23
+      image-tag:
+        description: "Verification image tag to deploy (e.g. sha-abc1234)"
+        required: true
+
+env:
+  SYNCROOT_ARTIFACT_NAME: core/syncroot
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: publish-syncroot-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  publish-syncroot:
+    name: Publish syncroot artifact
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+      - name: Update image tag
+        run: yq -i '(.images[] | select(.name == "verification")).newTag = "${{ inputs.image-tag }}"' ./syncroot/${{ inputs.environment }}/kustomization.yaml
+
+      - name: Build and push syncroot artifact
+        uses: Altinn/altinn-platform/actions/flux/build-push-image@523f141da4f116fdd7331585396d83a5d7ade7ea # main
+        with:
+          image_name: ${{ env.SYNCROOT_ARTIFACT_NAME }}
+          tag: ${{ inputs.environment }}
+          workdir: ./syncroot
+          azure_subscription_id: ${{ secrets.DIS_SYNCROOT_AZURE_SUBSCRIPTION_ID }}
+          azure_app_id: ${{ secrets.DIS_SYNCROOT_AZURE_CLIENT_ID }}
+          azure_tenant_id: ${{ secrets.DIS_SYNCROOT_AZURE_TENANT_ID }}
