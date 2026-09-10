@@ -36,9 +36,12 @@ Use the immutable `sha-<short>` tag when deploying; the run's job summary prints
 tags it produced.
 
 ### Deploying
-Run the **Publish Syncroot artifact** workflow, picking an environment and the image
-tag to deploy. The tag is written into `syncroot/<env>/kustomization.yaml` at publish
-time, so no image tags are committed (`will-be-replaced` is the placeholder).
+Run the **Publish Syncroot artifact** workflow and pick an environment. Leave
+`image-tag` empty to deploy the image built from the current tip of `main`, or pass an
+explicit `sha-<short>` to deploy an older build. The workflow fails up front if the tag
+isn't in GHCR yet — dispatching right after a merge can outrun the image build. The tag
+is written into `syncroot/<env>/kustomization.yaml` at publish time, so no image tags
+are committed (`will-be-replaced` is the placeholder).
 
 ### Adding an environment
 Add `syncroot/<env>/kustomization.yaml` and an option to the workflow's `environment`
