@@ -98,7 +98,7 @@ void ConfigureServices(IServiceCollection services, IConfiguration config)
     services.AddControllers();
     services.AddMemoryCache();
 
-    services.AddHealthChecks().AddCheck<HealthCheck>("profile_health_check");
+    services.AddHealthChecks().AddCheck<HealthCheck>("verification_health_check");
 
     services.Configure<GeneralSettings>(config.GetSection("GeneralSettings"));
     services.Configure<AddressMaintenanceSettings>(config.GetSection("AddressMaintenanceSettings"));
