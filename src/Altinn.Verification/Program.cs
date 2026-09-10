@@ -9,6 +9,7 @@ using Altinn.Verification.Configuration;
 using Altinn.Verification.Core;
 using Altinn.Verification.Core.Extensions;
 using Altinn.Verification.Core.Telemetry;
+using Altinn.Verification.Health;
 using Altinn.Verification.Integrations;
 using Altinn.Verification.Integrations.Persistence;
 
@@ -97,6 +98,8 @@ void ConfigureServices(IServiceCollection services, IConfiguration config)
     services.AddControllers();
     services.AddMemoryCache();
 
+    services.AddHealthChecks().AddCheck<HealthCheck>("profile_health_check");
+
     services.Configure<GeneralSettings>(config.GetSection("GeneralSettings"));
     services.Configure<AddressMaintenanceSettings>(config.GetSection("AddressMaintenanceSettings"));
 
@@ -168,6 +171,7 @@ void Configure()
     app.UseAuthorization();
 
     app.MapControllers();
+    app.MapHealthChecks("/health");
 }
 
 async Task RunMigrationsAsync()
