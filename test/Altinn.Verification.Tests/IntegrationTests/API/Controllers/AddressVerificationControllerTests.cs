@@ -56,7 +56,7 @@ public class AddressVerificationControllerTests : IClassFixture<VerificationWebA
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         string responseContent = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-        List<VerifiedAddressResponse>? verifiedAddressResponse = JsonSerializer.Deserialize<List<VerifiedAddressResponse>>(responseContent, _serializerOptionsCamelCase);
+        List<VerifiedAddressResponse> verifiedAddressResponse = JsonSerializer.Deserialize<List<VerifiedAddressResponse>>(responseContent, _serializerOptionsCamelCase);
 
         Assert.NotNull(verifiedAddressResponse);
         Assert.Equal(2, verifiedAddressResponse.Count);
@@ -88,7 +88,7 @@ public class AddressVerificationControllerTests : IClassFixture<VerificationWebA
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
         string responseContent = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
-        List<VerifiedAddressResponse>? verifiedAddressResponse = JsonSerializer.Deserialize<List<VerifiedAddressResponse>>(responseContent, _serializerOptionsCamelCase);
+        List<VerifiedAddressResponse> verifiedAddressResponse = JsonSerializer.Deserialize<List<VerifiedAddressResponse>>(responseContent, _serializerOptionsCamelCase);
 
         Assert.NotNull(verifiedAddressResponse);
         Assert.Empty(verifiedAddressResponse);

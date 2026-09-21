@@ -82,9 +82,16 @@ kustomize build syncroot/at23
   the artifact is `core/syncroot`. The federated credential is scoped to `main`,
   which is what the workflow's `github.ref` gate matches.
 
+### Health probes
+The shared Deployment configures startup, readiness, and liveness probes against
+`/health` on the named `http` port (8080) for both environments. The startup probe
+allows up to 150 seconds for initialization before readiness and liveness checks
+begin. Readiness runs every 5 seconds and liveness every 10 seconds; both use a
+2-second timeout and tolerate two consecutive failures before acting on the third.
+
 ### Demo shortcuts
-- **No health probes.** The app exposes no `/health` endpoints, so the Deployment has
-  none — probes would crash-loop it. Add both together.
+- **Process health only.** `/health` confirms the app can respond; it does not check
+  database connectivity or downstream dependencies.
 - **No database.** `PostgreSqlSettings__EnableDBConnection: "false"` skips the EF
   migrations so the pod starts clean; the API cannot serve real traffic until
   connection strings come in from a Secret.
